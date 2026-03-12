@@ -1,0 +1,263 @@
+import os
+import numpy as np
+import scipy.io
+from scipy.stats import skew, kurtosis
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.model_selection import KFold
+
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+import lightgbm as lgb
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# =============================
+# DATASET PATH
+# =============================
+
+DATA_PATH = r"E:\FYP\FYP"
+
+# SUBJECT SPLIT
+TRAIN_SUBJECTS = ["DB2_s1","DB2_s2"]
+TEST_SUBJECTS  = ["DB2_s3"]
+
+# =============================
+# FEATURE FUNCTIONS
+# =============================
+
+def rms(x): return np.sqrt(np.mean(x**2))
+def mav(x): return np.mean(np.abs(x))
+def wl(x): return np.sum(np.abs(np.diff(x)))
+def zc(x): return np.sum(np.diff(np.sign(x)) != 0)
+def ssc(x): return np.sum(np.diff(np.sign(np.diff(x))) != 0)
+def iemg(x): return np.sum(np.abs(x))
+
+def extract_features(signal):
+
+    return [
+        np.mean(signal),
+        rms(signal),
+        mav(signal),
+        np.var(signal),
+        wl(signal),
+        zc(signal),
+        ssc(signal),
+        iemg(signal),
+        np.std(signal),
+        np.max(signal),
+        np.min(signal),
+        skew(signal),
+        kurtosis(signal),
+        np.percentile(signal,25),
+        np.percentile(signal,50),
+        np.percentile(signal,75)
+    ]
+
+# =============================
+# DATA STORAGE
+# =============================
+
+X_train=[]
+y_train=[]
+
+X_test=[]
+y_test=[]
+
+# =============================
+# LOAD DATA
+# =============================
+
+print("Loading dataset...")
+
+for subject in os.listdir(DATA_PATH):
+
+    subject_path = os.path.join(DATA_PATH,subject)
+
+    if not os.path.isdir(subject_path):
+        continue
+
+    if subject not in TRAIN_SUBJECTS and subject not in TEST_SUBJECTS:
+        continue
+
+    print("Processing Subject:",subject)
+
+    for file in os.listdir(subject_path):
+
+        if not file.endswith(".mat"):
+            continue
+
+        path = os.path.join(subject_path,file)
+
+        mat = scipy.io.loadmat(path)
+
+        if "emg" not in mat or "restimulus" not in mat:
+            continue
+
+        emg = mat["emg"]
+        labels = mat["restimulus"].flatten()
+
+        window = 300
+        step = 150
+
+        for i in range(0,len(emg)-window,step):
+
+            segment = emg[i:i+window]
+            label = labels[i]
+
+            if label == 0:
+                continue
+
+            segment = segment[:,:8]
+
+            feature_vector=[]
+
+            for ch in range(segment.shape[1]):
+                feature_vector.extend(
+                    extract_features(segment[:,ch])
+                )
+
+            if subject in TRAIN_SUBJECTS:
+
+                X_train.append(feature_vector)
+                y_train.append(label)
+
+            elif subject in TEST_SUBJECTS:
+
+                X_test.append(feature_vector)
+                y_test.append(label)
+
+# =============================
+# NUMPY CONVERSION
+# =============================
+
+X_train=np.array(X_train)
+y_train=np.array(y_train)
+
+X_test=np.array(X_test)
+y_test=np.array(y_test)
+
+print("Train Shape:",X_train.shape)
+print("Test Shape:",X_test.shape)
+
+# =============================
+# SCALING
+# =============================
+
+scaler=StandardScaler()
+
+X_train=scaler.fit_transform(X_train)
+X_test=scaler.transform(X_test)
+
+# =============================
+# PCA
+# =============================
+
+pca=PCA(n_components=0.95)
+
+X_train=pca.fit_transform(X_train)
+X_test=pca.transform(X_test)
+
+print("Features after PCA:",X_train.shape)
+
+# =============================
+# MODELS
+# =============================
+
+models = {
+
+"SVM":SVC(C=1,kernel="rbf",gamma="scale"),
+
+"RandomForest":RandomForestClassifier(
+n_estimators=200,
+n_jobs=-1
+),
+
+"LightGBM":lgb.LGBMClassifier(
+n_estimators=200,
+learning_rate=0.05
+)
+
+}
+
+# =============================
+# TRAIN + TEST MODELS
+# =============================
+
+results={}
+
+for name,model in models.items():
+
+    print("\nTraining:",name)
+
+    model.fit(X_train,y_train)
+
+    pred=model.predict(X_test)
+
+    acc=accuracy_score(y_test,pred)
+
+    results[name]=acc
+
+    print("Accuracy:",acc)
+
+# =============================
+# BEST MODEL
+# =============================
+
+best_model_name=max(results,key=results.get)
+
+print("\nBest Model:",best_model_name)
+
+best_model=models[best_model_name]
+
+pred=best_model.predict(X_test)
+
+# =============================
+# CONFUSION MATRIX
+# =============================
+
+cm=confusion_matrix(y_test,pred)
+
+plt.figure(figsize=(6,5))
+
+sns.heatmap(cm,annot=True,fmt="d",cmap="Blues")
+
+plt.title("Confusion Matrix ("+best_model_name+")")
+
+plt.xlabel("Predicted")
+plt.ylabel("True")
+
+plt.show()
+
+print(classification_report(y_test,pred))
+
+# =============================
+# 5 FOLD CROSS VALIDATION
+# =============================
+
+print("\nRunning 5-Fold Cross Validation...")
+
+kf=KFold(n_splits=5,shuffle=True,random_state=42)
+
+scores=[]
+
+for train_index,test_index in kf.split(X_train):
+
+    Xtr,Xte=X_train[train_index],X_train[test_index]
+    ytr,yte=y_train[train_index],y_train[test_index]
+
+    model=RandomForestClassifier(
+    n_estimators=200,
+    n_jobs=-1
+    )
+
+    model.fit(Xtr,ytr)
+
+    pred=model.predict(Xte)
+
+    scores.append(accuracy_score(yte,pred))
+
+print("5 Fold CV Accuracy:",np.mean(scores))
