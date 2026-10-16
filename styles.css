@@ -1,0 +1,799 @@
+/*
+ ===================================================================================
+ NeuroGrasp AI - High-Graphics Dark Mode Rehabilitation Suite
+ Vibrant Cyber Aesthetics: Deep Space Dark (#060913), Neon Cyan (#38bdf8), Emerald (#10b981), Neon Purple (#c084fc), Magenta (#f43f5e)
+ ===================================================================================
+*/
+
+:root {
+  --bg-dark: #060913;
+  --bg-card: rgba(13, 19, 36, 0.85);
+  --bg-card-border: rgba(56, 189, 248, 0.25);
+  --bg-header: rgba(10, 15, 30, 0.95);
+  
+  --accent-cyan: #38bdf8;
+  --accent-green: #10b981;
+  --accent-purple: #c084fc;
+  --accent-amber: #fbbf24;
+  --accent-rose: #f43f5e;
+  
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --text-muted: #64748b;
+
+  --color-fds: #38bdf8;
+  --color-edc: #f43f5e;
+  --color-fcr: #10b981;
+
+  --font-main: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(192, 132, 252, 0.08) 0%, transparent 40%);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.top-header {
+  background: var(--bg-header);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--bg-card-border);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-icon-box {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #38bdf8, #a855f7);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+}
+
+.brand-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(to right, #ffffff, var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  background: rgba(6, 9, 19, 0.8);
+  padding: 5px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--bg-card-border);
+  gap: 6px;
+}
+
+.nav-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 10px 20px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-tab-btn:hover {
+  color: #fff;
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.nav-tab-btn.active {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(192, 132, 252, 0.3));
+  color: #fff;
+  border: 1px solid var(--accent-cyan);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+}
+
+/* Buttons */
+.btn-pill {
+  padding: 10px 22px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border-radius: 30px;
+  border: 1px solid var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent-cyan);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+}
+
+.btn-pill:hover {
+  background: var(--accent-cyan);
+  color: var(--bg-dark);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+}
+
+.btn-pill.connected {
+  border-color: var(--accent-green);
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--accent-green);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+/* EMERGENCY POWER STOP BUTTON */
+.btn-estop {
+  border-color: var(--accent-rose) !important;
+  background: rgba(244, 63, 94, 0.2) !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.4) !important;
+}
+
+.btn-estop:hover {
+  background: var(--accent-rose) !important;
+  color: #fff !important;
+  box-shadow: 0 0 30px rgba(244, 63, 94, 0.8) !important;
+}
+
+.btn-estop.active-estop {
+  background: #f43f5e !important;
+  animation: estopPulse 0.8s infinite alternate;
+}
+
+@keyframes estopPulse {
+  0% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.5); }
+  100% { box-shadow: 0 0 35px rgba(244, 63, 94, 1); }
+}
+
+/* Viewport Layout */
+.main-viewport {
+  flex: 1;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tab-view {
+  display: none;
+}
+
+.tab-view.active-view {
+  display: block;
+}
+
+/* Glass Panels */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-glow);
+  margin-bottom: 20px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.panel-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.panel-badge {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(56, 189, 248, 0.18);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+/* Grid System */
+.grid-layout {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+}
+
+/* Game Selection Cards */
+.game-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.game-card-btn {
+  background: rgba(10, 15, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.game-card-btn:hover {
+  border-color: var(--accent-cyan);
+  transform: translateY(-2px);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.game-card-btn.active {
+  border-color: var(--accent-cyan);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(192, 132, 252, 0.2));
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+}
+
+.game-card-icon {
+  font-size: 2.2rem;
+}
+
+.game-card-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.game-card-sub {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* Game Canvas Container */
+.game-canvas-container {
+  width: 100%;
+  height: 500px;
+  background: #040711;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Oscilloscope Canvas */
+.emg-scope-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.emg-channel-card {
+  background: rgba(6, 9, 19, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.scope-canvas {
+  width: 100%;
+  height: 95px;
+  background: #03050c;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+}
+
+/* Metric Cards */
+.improvement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.metric-box {
+  background: rgba(10, 15, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  text-align: center;
+}
+
+.metric-title {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.metric-val {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--accent-cyan);
+  margin: 6px 0;
+}
+
+/* Terminal Log */
+.terminal-box {
+  background: #03050c;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  height: 140px;
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .top-header {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+  .nav-tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .grid-layout { grid-template-columns: 1fr !important; }
+  .grid-layout > div { grid-column: span 1 !important; }
+  .game-selector-grid { grid-template-columns: 1fr; }
+  .improvement-grid { grid-template-columns: 1fr; }
+  .game-canvas-container { height: 380px; }
+}
+
+/* ===================================================================================
+   WHITE MEDICAL CLINIC THEME (FOR PHONE APK & TOGGLEABLE FOR CLINICIANS)
+   =================================================================================== */
+body.theme-white,
+:root[data-theme="white"] body {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+  color: #0f172a;
+}
+
+body.theme-white .top-header {
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+}
+
+body.theme-white .brand-title {
+  background: linear-gradient(to right, #0284c7, #0f172a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body.theme-white .brand-subtitle {
+  color: #64748b;
+}
+
+body.theme-white .nav-tabs {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+body.theme-white .nav-tab-btn {
+  color: #475569;
+}
+
+body.theme-white .nav-tab-btn:hover {
+  color: #0f172a;
+  background: rgba(2, 132, 199, 0.08);
+}
+
+body.theme-white .nav-tab-btn.active {
+  background: #ffffff;
+  color: #0284c7;
+  border-color: #0284c7;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.15);
+}
+
+body.theme-white .glass-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+body.theme-white .panel-title {
+  color: #0f172a;
+}
+
+body.theme-white .panel-badge {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: rgba(2, 132, 199, 0.3);
+  color: #0284c7;
+}
+
+body.theme-white .metric-box {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+body.theme-white .metric-title {
+  color: #64748b;
+}
+
+body.theme-white .emg-channel-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.theme-white .scope-canvas {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+body.theme-white .game-card-btn {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body.theme-white .game-card-btn.active {
+  background: #f0fdf4;
+  border-color: #10b981;
+}
+
+body.theme-white .game-card-title {
+  color: #0f172a;
+}
+
+body.theme-white .game-canvas-container {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+body.theme-white .terminal-box {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0369a1;
+}
+
+body.theme-white table thead tr {
+  border-bottom: 2px solid #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+body.theme-white table tbody tr {
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #1e293b;
+}
+
+body.theme-white table tbody tr:hover {
+  background: #f8fafc;
+}
+
+body.theme-white .btn-pill {
+  background: #ffffff;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+body.theme-white .btn-pill:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+body.theme-white .patient-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+/* ===================================================================================
+   PATIENT INTAKE & 3-TRIAL MODAL & HUD
+   =================================================================================== */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(6, 9, 19, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal-backdrop.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-card {
+  background: #0d1324;
+  border: 1px solid var(--accent-cyan);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.25);
+  color: #fff;
+  position: relative;
+}
+
+body.theme-white .modal-card {
+  background: #ffffff;
+  border-color: #0284c7;
+  color: #0f172a;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15), 0 0 30px rgba(2, 132, 199, 0.15);
+}
+
+.modal-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.modal-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-bottom: 22px;
+  line-height: 1.4;
+}
+
+body.theme-white .modal-subtitle {
+  color: #64748b;
+}
+
+.form-group {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  color: var(--accent-cyan);
+}
+
+body.theme-white .form-label {
+  color: #0284c7;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(6, 9, 19, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+}
+
+body.theme-white .form-input {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.form-input:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+/* Patient Header Badge */
+.patient-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+body.theme-white .patient-badge-header {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+.trial-indicator-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  color: #10b981;
+}
+
+/* Bluetooth Connected Pill */
+.btn-pill.bluetooth-active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.5) !important;
+}
+
+/* High-Resolution Graphs Canvas Container */
+.chart-container {
+  width: 100%;
+  background: rgba(6, 9, 19, 0.9);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px;
+  margin-top: 14px;
+  position: relative;
+}
+
+body.theme-white .chart-container {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+.highres-canvas {
+  width: 100%;
+  height: 240px;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+
+/* On-screen Touch Controls for Mobile (Samsung A14, Tecno, iPhone) */
+.mobile-game-touch-controls {
+  display: none;
+  margin-top: 10px;
+  gap: 8px;
+  justify-content: center;
+}
+
+@media (max-width: 960px) {
+  .mobile-game-touch-controls {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+.touch-btn {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid var(--accent-cyan);
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+body.theme-white .touch-btn {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0284c7;
+}
+
+.touch-btn:active {
+  transform: scale(0.95);
+  background: var(--accent-cyan);
+  color: #000;
+}
+
+/* Mirror Therapy Studio Styles */
+.flex-sensor-row {
+  transition: all 0.2s ease;
+}
+
+.flex-sensor-row:hover {
+  transform: translateX(4px);
+  border-color: rgba(56, 189, 248, 0.4) !important;
+}
+
+body.theme-white .flex-sensor-row {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+body.theme-white .flex-sensor-row strong {
+  color: #0f172a !important;
+}
+
+body.theme-white #canvas-mirror-hands {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+

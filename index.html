@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeuroGrasp AI — sEMG Monitoring & GNN Rehabilitation Suite</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Header Bar -->
+    <header class="top-header">
+      <div class="brand-wrapper">
+        <div class="brand-icon-box">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">NeuroGrasp AI</div>
+          <div class="brand-subtitle">ESP32 30-Pin • 3-Ch sEMG • PCA9685 Servos • Mirror Therapy</div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" data-tab="monitoring">📊 Live sEMG & GNN</button>
+        <button class="nav-tab-btn" data-tab="mirror">🪞 Mirror Exoskeleton</button>
+        <button class="nav-tab-btn" data-tab="game">🎮 Visual Therapy Games</button>
+        <button class="nav-tab-btn" data-tab="progress">📈 Progress Tracker</button>
+        <button class="nav-tab-btn" data-tab="hardware">🔌 Hardware Wiring</button>
+      </nav>
+
+      <!-- Patient Info & Header Actions -->
+      <div class="header-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        
+        <!-- Active Patient Info Display -->
+        <div class="patient-badge-header" id="header-patient-badge" title="Click to view or edit patient profile">
+          <span>👤 <strong id="header-patient-name">Patient: Pending Intake</strong></span>
+          <span style="opacity: 0.6;">|</span>
+          <span>Age: <strong id="header-patient-age">--</strong></span>
+          <span id="header-trial-badge" class="trial-indicator-pill">Trial 1 of 3</span>
+        </div>
+
+        <!-- New Patient Intake Button -->
+        <button id="btn-new-patient" class="btn-pill" title="Register New Patient (Reset 3-Trial Evaluation)">
+          <span>👤 New Patient</span>
+        </button>
+
+        <!-- Theme Toggle (Dark Cyber / White Clinic) -->
+        <button id="btn-toggle-theme" class="btn-pill" title="Toggle Clean White Clinic Theme / Cyber Dark Mode">
+          <span id="theme-icon">☀️ White Clinic</span>
+        </button>
+
+        <!-- Emergency Stop -->
+        <button id="btn-emergency-stop" class="btn-pill btn-estop" title="Emergency Power Stop: Turn OFF all servos, haptics & motors instantly">
+          <span>🚨 EMERGENCY STOP</span>
+        </button>
+
+        <!-- Bluetooth BLE Connect -->
+        <button id="btn-connect-ble" class="btn-pill" title="Connect Wirelessly via Bluetooth (Web Bluetooth API for Phones & PC)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m7 7 10 10-5 5V2l5 5L7 17"></path></svg>
+          <span id="txt-ble-status">Connect BLE</span>
+        </button>
+
+        <!-- USB WebSerial Connect -->
+        <button id="btn-connect-usb" class="btn-pill" title="Connect ESP32 USB WebSerial (115200 Baud)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          <span id="txt-usb-status">Connect USB</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="main-viewport">
+
+      <!-- TAB 1: LIVE sEMG MONITORING & GNN TOPOLOGY -->
+      <section id="tab-monitoring" class="tab-view active-view">
+        <div class="grid-layout">
+          
+          <!-- Left Col: 3 sEMG Scopes -->
+          <div class="glass-panel" style="grid-column: span 7;">
+            <div class="panel-header">
+              <h2 class="panel-title">
+                <span>⚡ Live 3-Channel Forearm sEMG Oscilloscope</span>
+              </h2>
+              <span class="panel-badge">500 Hz Sampling</span>
+            </div>
+
+            <div class="emg-scope-container">
+              <!-- Channel 1: FDS -->
+              <div class="emg-channel-card">
+                <div class="emg-channel-header" style="color: var(--color-fds);">
+                  <span>FDS (Finger Flexion) • GPIO 36 (VP)</span>
+                  <span id="val-fds-env">0%</span>
+                </div>
+                <canvas id="canvas-fds" class="scope-canvas" width="600" height="95"></canvas>
+              </div>
+
+              <!-- Channel 2: EDC -->
+              <div class="emg-channel-card">
+                <div class="emg-channel-header" style="color: var(--color-edc);">
+                  <span>EDC (Finger Extension) • GPIO 39 (VN)</span>
+                  <span id="val-edc-env">0%</span>
+                </div>
+                <canvas id="canvas-edc" class="scope-canvas" width="600" height="95"></canvas>
+              </div>
+
+              <!-- Channel 3: FCR -->
+              <div class="emg-channel-card">
+                <div class="emg-channel-header" style="color: var(--color-fcr);">
+                  <span>FCR (Wrist Flexion) • GPIO 34</span>
+                  <span id="val-fcr-env">0%</span>
+                </div>
+                <canvas id="canvas-fcr" class="scope-canvas" width="600" height="95"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Col: GNN Graph Topology & Gesture Output -->
+          <div class="glass-panel" style="grid-column: span 5;">
+            <div class="panel-header">
+              <h2 class="panel-title">
+                <span>🧠 GNN Spectral Graph Convolution</span>
+              </h2>
+              <span class="panel-badge" id="gnn-confidence-val">95% Confidence</span>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 14px;">
+              <span style="font-size: 0.75rem; color: var(--text-dim);">PREDICTED GESTURE (8 CLASSES):</span>
+              <div id="gnn-predicted-gesture" style="font-size: 1.65rem; font-weight: 800; color: var(--accent-cyan); font-family: var(--font-mono); margin-top: 2px;">
+                Final Rest
+              </div>
+            </div>
+
+            <!-- GNN 3-Node Topology Canvas -->
+            <div style="background: rgba(3, 5, 12, 0.95); border-radius: var(--radius-md); padding: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">
+              <canvas id="canvas-gnn-topology" width="380" height="230" style="width:100%; height:230px;"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 2: MIRROR THERAPY & EXOSKELETON CONTROL -->
+      <section id="tab-mirror" class="tab-view">
+        
+        <!-- Header Banner & Clinical Controls Toolbar -->
+        <div class="glass-panel" style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0;">🪞 Active Mirror Therapy Studio</h2>
+                <span class="panel-badge" id="badge-mirror-mode" style="background: rgba(16, 185, 129, 0.2); border-color: var(--accent-green); color: var(--accent-green);">● MODE 0: MIRROR ACTIVE</span>
+              </div>
+              <p style="font-size: 0.82rem; color: var(--text-dim); margin-top: 4px; margin-bottom: 0;">
+                Bilateral Neuro-Kinematic Rehabilitation: Healthy Master Glove (Flex Sensors) directly commands Impaired Robotic Glove (PCA9685 Servos).
+              </p>
+            </div>
+
+            <!-- Quick Action Toolbar -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <!-- Servo Hardware Test Button -->
+              <button id="btn-test-servos" class="btn-pill" style="border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(234, 179, 8, 0.15);" title="Physically move all 3 servos (0° -> 60° -> 0°) to verify external 5V power supply and PCA9685 driver">
+                <span>🦾 Test Servos (Sweep 60°)</span>
+              </button>
+
+              <!-- Calibrate Flat -->
+              <button id="btn-calib-flat" class="btn-pill" style="border-color: var(--accent-cyan); color: var(--accent-cyan);" title="Capture baseline ADC when fingers are straight/flat">
+                <span>📏 Calibrate Flat</span>
+              </button>
+
+              <!-- Calibrate Fist -->
+              <button id="btn-calib-fist" class="btn-pill" style="border-color: var(--accent-purple); color: var(--accent-purple);" title="Capture baseline ADC when fingers are fully closed into a fist">
+                <span>✊ Calibrate Fist</span>
+              </button>
+
+              <!-- System Mode Selector -->
+              <select id="select-system-mode" style="background: rgba(10, 15, 30, 0.9); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); padding: 9px 14px; border-radius: 30px; font-size: 0.82rem; font-weight: 700; cursor: pointer;">
+                <option value="0">Mode 0: 🪞 Flex Mirror Therapy (Active)</option>
+                <option value="1">Mode 1: 🧠 sEMG / GNN Triggered</option>
+                <option value="2">Mode 2: 🎛️ Manual Slider Override</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Hardware Diagnostics Warning Note -->
+          <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 10px 14px; margin-top: 14px; display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; color: #fef08a;">
+            <div>
+              <strong>⚠️ MOTOR TROUBLESHOOTING CHECKLIST:</strong>
+              1. Servos require <strong>External 5V (2A - 5A)</strong> on PCA9685 green terminal (V+). ESP32 3.3V cannot power servos!
+              2. ESP32 GND and External 5V GND must be connected together (Common Ground).
+              3. Click <strong>"Test Servos"</strong> above: if servos don't sweep, check the external 5V power supply!
+            </div>
+          </div>
+        </div>
+
+        <!-- Synchronized Dual Hand Mirror Therapy Visualizer Canvas -->
+        <div class="glass-panel" style="margin-bottom: 20px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-weight: 800; font-size: 0.95rem; color: #fff;">
+              🪞 Bilateral Hand Synchronization Visualizer
+            </div>
+            <div style="display: flex; gap: 16px; font-size: 0.75rem; font-weight: 700;">
+              <span style="color: var(--accent-cyan);">● Healthy Master Hand (Flex Sensors)</span>
+              <span style="color: var(--accent-rose);">● Impaired Robotic Exoskeleton (PCA9685 Servos)</span>
+            </div>
+          </div>
+          <canvas id="canvas-mirror-hands" width="900" height="260" style="width: 100%; height: 260px; border-radius: 8px; background: rgba(3, 6, 16, 0.95);"></canvas>
+        </div>
+
+        <div class="grid-layout">
+          
+          <!-- Left: 5 Flex Sensors with Live ADC and Angle Displays -->
+          <div class="glass-panel" style="grid-column: span 6;">
+            <div class="panel-header">
+              <h2 class="panel-title">🖐️ Healthy Master Glove (5 Flex Sensors)</h2>
+              <span class="panel-badge">ADC1 & Adaptive Calib</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Thumb -->
+              <div class="flex-sensor-row" style="background: rgba(6, 9, 20, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px 14px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: var(--accent-cyan);">Thumb • GPIO 35 (ADC1)</span>
+                  <span style="font-family: var(--font-mono); font-size: 0.85rem;"><span id="flex-raw-0" style="color: var(--text-dim); margin-right: 8px;">ADC: --</span><strong id="flex-val-0" style="color: #fff; font-size: 1.1rem;">0°</strong></span>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden;">
+                  <div id="flex-bar-0" style="width: 0%; height: 100%; background: var(--accent-cyan); transition: width 0.1s ease;"></div>
+                </div>
+              </div>
+
+              <!-- Index -->
+              <div class="flex-sensor-row" style="background: rgba(6, 9, 20, 0.7); border: 1px solid rgba(192, 132, 252, 0.2); padding: 10px 14px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: var(--accent-purple);">Index Finger • GPIO 32 (ADC1)</span>
+                  <span style="font-family: var(--font-mono); font-size: 0.85rem;"><span id="flex-raw-1" style="color: var(--text-dim); margin-right: 8px;">ADC: --</span><strong id="flex-val-1" style="color: #fff; font-size: 1.1rem;">0°</strong></span>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden;">
+                  <div id="flex-bar-1" style="width: 0%; height: 100%; background: var(--accent-purple); transition: width 0.1s ease;"></div>
+                </div>
+              </div>
+
+              <!-- Middle -->
+              <div class="flex-sensor-row" style="background: rgba(6, 9, 20, 0.7); border: 1px solid rgba(16, 185, 129, 0.2); padding: 10px 14px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: var(--accent-green);">Middle Finger • GPIO 33 (ADC1)</span>
+                  <span style="font-family: var(--font-mono); font-size: 0.85rem;"><span id="flex-raw-2" style="color: var(--text-dim); margin-right: 8px;">ADC: --</span><strong id="flex-val-2" style="color: #fff; font-size: 1.1rem;">0°</strong></span>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden;">
+                  <div id="flex-bar-2" style="width: 0%; height: 100%; background: var(--accent-green); transition: width 0.1s ease;"></div>
+                </div>
+              </div>
+
+              <!-- Ring -->
+              <div class="flex-sensor-row" style="background: rgba(6, 9, 20, 0.7); border: 1px solid rgba(244, 63, 94, 0.2); padding: 10px 14px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: var(--accent-rose);">Ring Finger • GPIO 25</span>
+                  <span style="font-family: var(--font-mono); font-size: 0.85rem;"><span id="flex-raw-3" style="color: var(--text-dim); margin-right: 8px;">ADC: --</span><strong id="flex-val-3" style="color: #fff; font-size: 1.1rem;">0°</strong></span>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden;">
+                  <div id="flex-bar-3" style="width: 0%; height: 100%; background: var(--accent-rose); transition: width 0.1s ease;"></div>
+                </div>
+              </div>
+
+              <!-- Pinky -->
+              <div class="flex-sensor-row" style="background: rgba(6, 9, 20, 0.7); border: 1px solid rgba(234, 179, 8, 0.2); padding: 10px 14px; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: var(--accent-gold);">Pinky Finger • GPIO 26</span>
+                  <span style="font-family: var(--font-mono); font-size: 0.85rem;"><span id="flex-raw-4" style="color: var(--text-dim); margin-right: 8px;">ADC: --</span><strong id="flex-val-4" style="color: #fff; font-size: 1.1rem;">0°</strong></span>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden;">
+                  <div id="flex-bar-4" style="width: 0%; height: 100%; background: var(--accent-gold); transition: width 0.1s ease;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: 3 Exoskeleton Servos Status & Manual Sliders + Haptics -->
+          <div class="glass-panel" style="grid-column: span 6;">
+            <div class="panel-header">
+              <h2 class="panel-title">🦾 Impaired Hand Exoskeleton Servos</h2>
+              <span class="panel-badge">PCA9685 I2C (0x40)</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Servo 1: Thumb -->
+              <div style="background: rgba(6, 9, 19, 0.8); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: var(--accent-cyan);">Servo 1: Thumb Exoskeleton (Ch 0)</span>
+                  <span id="txt-servo1-angle" style="font-family: var(--font-mono); font-weight: 800; color: #fff;">0°</span>
+                </div>
+                <input type="range" id="slider-servo1" min="0" max="90" value="0" style="width: 100%; cursor: pointer;">
+              </div>
+
+              <!-- Servo 2: Middle & Index -->
+              <div style="background: rgba(6, 9, 19, 0.8); border: 1px solid rgba(192, 132, 252, 0.2); padding: 12px; border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: var(--accent-purple);">Servo 2: Index + Middle Fingers (Ch 1)</span>
+                  <span id="txt-servo2-angle" style="font-family: var(--font-mono); font-weight: 800; color: #fff;">0°</span>
+                </div>
+                <input type="range" id="slider-servo2" min="0" max="90" value="0" style="width: 100%; cursor: pointer;">
+              </div>
+
+              <!-- Servo 3: Ring & Pinky -->
+              <div style="background: rgba(6, 9, 19, 0.8); border: 1px solid rgba(16, 185, 129, 0.2); padding: 12px; border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: var(--accent-green);">Servo 3: Ring + Pinky Fingers (Ch 2)</span>
+                  <span id="txt-servo3-angle" style="font-family: var(--font-mono); font-weight: 800; color: #fff;">0°</span>
+                </div>
+                <input type="range" id="slider-servo3" min="0" max="90" value="0" style="width: 100%; cursor: pointer;">
+              </div>
+
+              <!-- Haptic Feedback Controls -->
+              <div style="margin-top: 8px;">
+                <div class="panel-header" style="border: none; margin-bottom: 8px; padding-bottom: 0;">
+                  <h3 style="font-size: 0.88rem; font-weight: 800; color: #fff;">📳 5V Haptic Vibration Sensory Motors (Ch 3 - 7)</h3>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button onclick="triggerHapticPulse(100)" class="btn-pill" style="flex:1; justify-content:center; padding: 8px 12px; font-size: 0.78rem;">Pulse Full (100%)</button>
+                  <button onclick="triggerHapticPulse(50)" class="btn-pill" style="flex:1; justify-content:center; border-color: var(--accent-purple); color: var(--accent-purple); padding: 8px 12px; font-size: 0.78rem;">Gentle (50%)</button>
+                  <button onclick="triggerHapticPulse(0)" class="btn-pill" style="flex:1; justify-content:center; border-color: var(--accent-rose); color: var(--accent-rose); padding: 8px 12px; font-size: 0.78rem;">Stop Haptics</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 3: VISUAL REHABILITATION THERAPY GAMES -->
+      <section id="tab-game" class="tab-view">
+        
+        <!-- 3 Interactive Game Cards Selection -->
+        <div class="game-selector-grid">
+          <div id="card-game-hand" class="game-card-btn active" onclick="selectGameMode('hand_ball')">
+            <div class="game-card-icon">🔮</div>
+            <div>
+              <div class="game-card-title">Game 1: Cyber Hand & Sphere Ball</div>
+              <div class="game-card-sub">Visual hand squeezes ball in real-time</div>
+            </div>
+          </div>
+
+          <div id="card-game-maze" class="game-card-btn" onclick="selectGameMode('maze')">
+            <div class="game-card-icon">🌀</div>
+            <div>
+              <div class="game-card-title">Game 2: NeuroMaze Explorer</div>
+              <div class="game-card-sub">Guided hand movements to navigate & win</div>
+            </div>
+          </div>
+
+          <div id="card-game-galaxy" class="game-card-btn" onclick="selectGameMode('galaxy')">
+            <div class="game-card-icon">🚀</div>
+            <div>
+              <div class="game-card-title">Game 3: Galaxy Starship Flight</div>
+              <div class="game-card-sub">Postural flight, plasma blaster & star magnet</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-layout">
+          
+          <!-- Left: High-Graphics Canvas Box -->
+          <div class="glass-panel" style="grid-column: span 8; padding: 16px;">
+            <div class="panel-header" style="margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <h2 class="panel-title">
+                <span>🎮 Interactive Visual Therapy Viewport</span>
+              </h2>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <span id="active-game-trial-pill" class="trial-indicator-pill">Trial 1 of 3</span>
+                <select id="select-game-duration" style="background: rgba(10, 15, 30, 0.9); color: #fff; border: 1px solid var(--accent-cyan); padding: 6px 12px; border-radius: 8px; font-size: 0.82rem; font-weight: 700;">
+                  <option value="60">60 Seconds</option>
+                  <option value="120">120 Seconds</option>
+                  <option value="180">180 Seconds</option>
+                </select>
+                <button id="btn-start-game" class="btn-pill" style="background: var(--accent-cyan); color: var(--bg-dark);">Start Trial</button>
+                <button id="btn-stop-game" class="btn-pill" style="display: none; background: var(--accent-rose); color: #fff; border-color: var(--accent-rose);">End Trial</button>
+              </div>
+            </div>
+
+            <!-- Canvas Viewport -->
+            <div class="game-canvas-container">
+              <canvas id="visual-game-canvas" class="game-canvas"></canvas>
+            </div>
+
+            <!-- Mobile Touch Controls Helper (For Samsung A14, Tecno, iPhone) -->
+            <div class="mobile-game-touch-controls" id="mobile-touch-bar">
+              <button class="touch-btn" id="touch-btn-up">⬆️ UP (Open Hand 🖐️)</button>
+              <button class="touch-btn" id="touch-btn-down">⬇️ DOWN (Squeeze Fist ✊)</button>
+              <button class="touch-btn" id="touch-btn-right">⏩ RIGHT / FORWARD (Flex Wrist 💪)</button>
+              <button class="touch-btn" id="touch-btn-action">⚡ ACTION / MAGNET (Sphere Grasp 🔮)</button>
+            </div>
+          </div>
+
+          <!-- Right: Live Target Matcher & Hand Guidance -->
+          <div class="glass-panel" style="grid-column: span 4; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;">
+            <div class="panel-header">
+              <h2 class="panel-title">🎯 Live Target & Hand Guidance</h2>
+            </div>
+
+            <div style="text-align: center; padding: 16px; background: rgba(10, 15, 30, 0.8); border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.08);">
+              <span style="font-size: 0.74rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">REQUIRED HAND MOVEMENT:</span>
+              <div id="game-target-name" style="font-size: 1.45rem; font-weight: 800; color: var(--accent-cyan); margin: 6px 0;">
+                🔮 SPHERE GRASP
+              </div>
+              <p id="game-target-desc" style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.4;">
+                Squeeze the glowing sphere ball with balanced FDS & EDC co-stabilization.
+              </p>
+            </div>
+
+            <!-- Hand Posture Visual Indicator Card -->
+            <div id="hand-guidance-card" style="padding: 14px; background: rgba(6, 9, 19, 0.85); border-radius: var(--radius-md); border: 1px solid rgba(56, 189, 248, 0.2); font-size: 0.8rem; line-height: 1.5;">
+              <div style="font-weight: 800; color: var(--accent-cyan); margin-bottom: 4px;">🖐️ HAND CONTROL GUIDE:</div>
+              <div id="hand-guidance-instruction" style="color: var(--text-dim);">
+                • <strong>Open Hand (EDC):</strong> Fly / Move Up<br>
+                • <strong>Tight Fist (FDS):</strong> Dive / Move Down<br>
+                • <strong>Wrist Flexion (FCR):</strong> Move Right towards WIN zone<br>
+                • <strong>Balanced Squeeze:</strong> Shield & Star Magnet
+              </div>
+            </div>
+
+            <div style="text-align: center; padding: 16px; background: rgba(6, 9, 19, 0.9); border-radius: var(--radius-md); border: 1px solid var(--bg-card-border);">
+              <span style="font-size: 0.74rem; color: var(--text-dim); font-weight: 700; text-transform: uppercase;">GNN GESTURE MATCH</span>
+              <div id="game-match-pct" style="font-size: 2.6rem; font-weight: 800; font-family: var(--font-mono); color: var(--accent-green);">
+                0%
+              </div>
+              <div style="height: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 5px; overflow: hidden; margin-top: 10px;">
+                <div id="game-match-fill" style="height: 100%; width: 0%; background: var(--accent-green); transition: width 0.1s;"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 4: PROGRESS TRACKER (3 TRIALS, CLINICAL TABLE & HIGH-RESOLUTION GRAPHS) -->
+      <section id="tab-progress" class="tab-view">
+        
+        <!-- Active Patient Summary Card -->
+        <div class="glass-panel" style="margin-bottom: 20px;">
+          <div class="panel-header" style="flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h2 class="panel-title">📈 Clinical Evaluation — 3 Trials Protocol</h2>
+              <div style="font-size: 0.85rem; color: var(--text-dim); margin-top: 3px;">
+                Patient: <strong id="progress-patient-name" style="color: var(--accent-cyan);">Pending Intake</strong> | 
+                Age: <strong id="progress-patient-age" style="color: #fff;">--</strong> | 
+                Session: <span id="progress-session-id" style="font-family: var(--font-mono);">#NG-2026</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button id="btn-download-charts" class="btn-pill" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                📥 Download High-Res Charts (.PNG)
+              </button>
+              <button id="btn-export-report" class="btn-pill">
+                📄 Export Clinical Report (.txt)
+              </button>
+              <button id="btn-progress-new-patient" class="btn-pill" style="background: var(--accent-green); color: #000; font-weight: 800;">
+                👤 Register Next Patient
+              </button>
+            </div>
+          </div>
+
+          <div class="improvement-grid">
+            <div class="metric-box">
+              <div class="metric-title">Evaluation Stage</div>
+              <div class="metric-val" id="stat-trial-progress">Trial 1 / 3</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);" id="stat-trial-sub">Complete 3 trials to finalize report</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-title">Trial 1 ➔ Trial 3 Growth</div>
+              <div class="metric-val" id="stat-overall-recovery" style="color: var(--accent-green);">+0.0%</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Neuromuscular recovery index</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-title">Average Trial Accuracy</div>
+              <div class="metric-val" id="stat-avg-accuracy" style="color: var(--accent-purple);">0.0%</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">GNN target precision</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- High-Resolution Clinical Graphs Section -->
+        <div class="grid-layout" style="margin-bottom: 20px;">
+          
+          <!-- High-Res Chart 1: Accuracy & Clinical Growth Curve -->
+          <div class="glass-panel" style="grid-column: span 6;">
+            <div class="panel-header">
+              <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--accent-cyan);">
+                📈 Chart 1: Trial 1 ➔ 2 ➔ 3 Accuracy & Recovery Trajectory
+              </h3>
+              <span class="panel-badge">High-Res DPI</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="canvas-chart-accuracy" class="highres-canvas"></canvas>
+            </div>
+            <div style="display: flex; justify-content: space-around; font-size: 0.75rem; color: var(--text-dim); margin-top: 8px;">
+              <span style="color: #38bdf8;">● Trial Accuracy (%)</span>
+              <span style="color: #10b981;">● Recovery Trajectory Index (%)</span>
+              <span style="color: #64748b;">--- Clinical Target (90%)</span>
+            </div>
+          </div>
+
+          <!-- High-Res Chart 2: 3-Channel Forearm Muscle Balance -->
+          <div class="glass-panel" style="grid-column: span 6;">
+            <div class="panel-header">
+              <h3 style="font-size: 0.95rem; font-weight: 800; color: var(--accent-purple);">
+                ⚡ Chart 2: Forearm Muscle Balance (FDS / EDC / FCR)
+              </h3>
+              <span class="panel-badge">3-Channel EMG</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="canvas-chart-muscles" class="highres-canvas"></canvas>
+            </div>
+            <div style="display: flex; justify-content: space-around; font-size: 0.75rem; color: var(--text-dim); margin-top: 8px;">
+              <span style="color: #38bdf8;">■ FDS (Flexion)</span>
+              <span style="color: #f43f5e;">■ EDC (Extension)</span>
+              <span style="color: #10b981;">■ FCR (Wrist)</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Clinical Records Table -->
+        <div class="glass-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">📋 Detailed 3-Trial Clinical Records Table</h2>
+            <span class="panel-badge" id="table-trial-status-badge">Awaiting Trial 1</span>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="color: var(--text-dim); font-size: 0.78rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                  <th style="padding: 12px;">Trial #</th>
+                  <th style="padding: 12px;">Date & Time</th>
+                  <th style="padding: 12px;">Therapy Game</th>
+                  <th style="padding: 12px;">Duration</th>
+                  <th style="padding: 12px;">Accuracy</th>
+                  <th style="padding: 12px;">Score</th>
+                  <th style="padding: 12px;">sEMG Balance (FDS / EDC / FCR)</th>
+                  <th style="padding: 12px;">Recovery Growth</th>
+                </tr>
+              </thead>
+              <tbody id="progress-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: HARDWARE WIRING DIAGRAM -->
+      <section id="tab-hardware" class="tab-view">
+        <div class="glass-panel" style="max-width: 900px; margin: 0 auto;">
+          <div class="panel-header">
+            <h2 class="panel-title">🔌 ESP32 30-Pin Wiring Map (3x sEMG + 5x Flex + PCA9685 3 Servos + 5 Haptics)</h2>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.88rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--bg-card-border); color: var(--accent-cyan);">
+                <th style="padding: 12px; text-align: left;">Component</th>
+                <th style="padding: 12px; text-align: left;">Function / Target</th>
+                <th style="padding: 12px; text-align: left;">ESP32 30-Pin Pin</th>
+                <th style="padding: 12px; text-align: left;">PCA9685 Channel</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- sEMG Sensors -->
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding: 12px;">BioAmp EXG Pill #1</td>
+                <td style="padding: 12px;">FDS (Finger Flexion)</td>
+                <td style="padding: 12px; font-weight: 800; color: var(--accent-cyan);">GPIO 36 (VP)</td>
+                <td style="padding: 12px;">—</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding: 12px;">BioAmp EXG Pill #2</td>
+                <td style="padding: 12px;">EDC (Finger Extension)</td>
+                <td style="padding: 12px; font-weight: 800; color: var(--accent-rose);">GPIO 39 (VN)</td>
+                <td style="padding: 12px;">—</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding: 12px;">BioAmp EXG Pill #3</td>
+                <td style="padding: 12px;">FCR (Wrist Flexion)</td>
+                <td style="padding: 12px; font-weight: 800; color: var(--accent-green);">GPIO 34</td>
+                <td style="padding: 12px;">—</td>
+              </tr>
+
+              <!-- Servos -->
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding: 12px;">Exoskeleton Servo 1</td>
+                <td style="padding: 12px;">Thumb Actuator</td>
+                <td style="padding: 12px;">I2C SDA (21) / SCL (22)</td>
+                <td style="padding: 12px; font-weight: 800; color: var(--accent-cyan);">PCA9685 Ch 0</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding: 12px;">Exoskeleton Servo 2</td>
+                <td style="padding: 12px;">Index & Middle Fingers</td>
+                <td style="padding: 12px;">I2C SDA (21) / SCL (22)</td>
+                <td style="padding: 12px; font-weight: 800; color: var(--accent-purple);">PCA9685 Ch 1</td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding: 12px;">Exoskeleton Servo 3</td>
+                <td style="padding: 12px;">Ring & Pinky Fingers</td>
+                <td style="padding: 12px;">I2C SDA (21) / SCL (22)</td>
+                <td style="padding: 12px; font-weight: 800; color: var(--accent-green);">PCA9685 Ch 2</td>
+              </tr>
+
+              <!-- Flex Sensors -->
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <td style="padding: 12px;">5 Flex Sensors (Master Glove)</td>
+                <td style="padding: 12px;">Thumb, Index, Mid, Ring, Pinky</td>
+                <td style="padding: 12px; font-weight: 800;">GPIO 35, 32, 33, 25, 26</td>
+                <td style="padding: 12px;">—</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px;">5 Vibration Cell Motors</td>
+                <td style="padding: 12px;">5V Haptic Feedback</td>
+                <td style="padding: 12px;">I2C SDA (21) / SCL (22)</td>
+                <td style="padding: 12px; font-weight: 800;">PCA9685 Ch 3, 4, 5, 6, 7</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- System Diagnostic Terminal -->
+      <div class="glass-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">📟 System Telemetry Log</h2>
+        </div>
+        <div id="app-terminal" class="terminal-box"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Patient Intake Modal (Mandatory first step: Asks Patient Name & Age) -->
+  <div id="modal-patient-intake" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span>🩺</span>
+        <span>Patient Intake & 3-Trial Protocol</span>
+      </div>
+      <div class="modal-subtitle">
+        Enter patient details to initialize a standardized 3-trial clinical evaluation. The system records Trial 1, 2, and 3, generates high-resolution clinical graphs & tables, and allows immediate transition to subsequent patients.
+      </div>
+
+      <form id="form-patient-intake" onsubmit="return false;">
+        <div class="form-group">
+          <label class="form-label" for="input-patient-name">Patient Full Name:</label>
+          <input type="text" id="input-patient-name" class="form-input" placeholder="e.g. John Doe, Sarah Jenkins" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-patient-age">Patient Age (Years):</label>
+          <input type="number" id="input-patient-age" class="form-input" placeholder="e.g. 45" min="1" max="120" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="select-hand-affected">Rehabilitation Target Hand:</label>
+          <select id="select-hand-affected" class="form-input" style="cursor: pointer;">
+            <option value="Right Hand">Right Hand (Affected) • Mirror Left Master</option>
+            <option value="Left Hand">Left Hand (Affected) • Mirror Right Master</option>
+            <option value="Bilateral">Bilateral Co-rehabilitation</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 22px;">
+          <button type="submit" id="btn-submit-intake" class="btn-pill" style="flex: 1; justify-content: center; background: var(--accent-cyan); color: #000; font-weight: 800; font-size: 1rem; padding: 12px;">
+            🚀 Begin Trial 1 Session
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Load Scripts -->
+  <script src="emg_engine.js"></script>
+  <script src="gnn_model.js"></script>
+  <script src="rehab_game.js"></script>
+  <script src="progress_tracker.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
